@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Ward Orders">
+<meta name="theme-color" content="#f5f7f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f171b" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Ward Order Handbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html{-webkit-text-size-adjust:100%}
+:root{padding-top:env(safe-area-inset-top,0px)}
+body{margin:0}
+img{max-width:100%}
+/* Layout: order-sheet reference — sticky search bar, group index rail on desktop, rows of drug / order / note */
+:root{
+  --bg:#f5f7f8; --paper:#ffffff; --ink:#15232b; --muted:#5a6b74; --line:#dde4e7;
+  --accent:#0e6e74; --accent-soft:#e1f0f0;
+  --fix:#9a5a00; --fix-bg:#fff2dc; --add:#2f6b2a; --add-bg:#e5f3e1; --warn:#a3262a; --warn-bg:#fdecec;
+  --f-display:'Bai Jamjuree','IBM Plex Sans Thai',system-ui,sans-serif;
+  --f-body:'IBM Plex Sans Thai',system-ui,sans-serif;
+  --f-mono:'IBM Plex Mono','IBM Plex Sans Thai',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f171b; --paper:#162227; --ink:#e3ecef; --muted:#93a6ae; --line:#26363d;
+  --accent:#5cc4c9; --accent-soft:#17363a;
+  --fix:#f0b35a; --fix-bg:#3a2a12; --add:#8fd486; --add-bg:#1c3319; --warn:#ff8f8f; --warn-bg:#3d1b1c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f171b; --paper:#162227; --ink:#e3ecef; --muted:#93a6ae; --line:#26363d;
+  --accent:#5cc4c9; --accent-soft:#17363a;
+  --fix:#f0b35a; --fix-bg:#3a2a12; --add:#8fd486; --add-bg:#1c3319; --warn:#ff8f8f; --warn-bg:#3d1b1c; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);padding-inline:16px;padding-block:0 48px}
+.wrap{max-width:1180px;margin:0 auto}
+header.top{padding-block:28px 12px;display:grid;gap:6px}
+header.top h1{font:700 clamp(1.6rem,4vw,2.3rem)/1.15 var(--f-display);margin:0;text-wrap:balance;letter-spacing:.01em}
+header.top p{margin:0;color:var(--muted);max-width:70ch}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bar input{flex:1 1 240px;min-width:0;font:16px var(--f-body);padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink)}
+.bar input:focus-visible,button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:500 13px var(--f-body);padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.count{font:12px var(--f-mono);color:var(--muted)}
+.layout{display:grid;grid-template-columns:210px minmax(0,1fr);gap:28px;margin-top:18px}
+nav.idx{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);align-self:start;display:grid;gap:2px;max-height:calc(100vh - 100px);overflow:auto}
+nav.idx a{color:var(--muted);text-decoration:none;font-size:13.5px;padding:4px 8px;border-radius:6px;display:flex;justify-content:space-between;gap:8px}
+nav.idx a:hover{background:var(--accent-soft);color:var(--ink)}
+nav.idx a span{font:11px var(--f-mono)}
+main{min-width:0;display:grid;gap:34px}
+.callout{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:grid;gap:8px}
+.callout h2{font:600 1.05rem var(--f-display);margin:0}
+.callout ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+.callout li{font-size:14px}
+.callout.warn{border-color:var(--warn);background:var(--warn-bg)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted)}
+section.grp{scroll-margin-top:calc(var(--barh,64px) + 8px)}
+section.grp h2{font:700 1.35rem/1.2 var(--f-display);margin:0 0 4px}
+.gt{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;width:100%;display:flex;align-items:baseline;gap:10px;text-align:left;cursor:default}
+.gt .cnt,.gt .chev{display:none}
+.row{position:relative}
+.cp{position:absolute;top:8px;right:8px;width:36px;height:36px;border:0;border-radius:8px;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;opacity:.55}
+.cp:hover,.cp:focus-visible{opacity:1;background:var(--accent-soft);color:var(--accent)}
+.cp svg{width:18px;height:18px}
+.nm{padding-right:36px}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:99px;font-size:14px;z-index:30;pointer-events:none}
+.noresult{color:var(--muted);padding:24px 4px;text-align:center}
+.tabbar,.sheet,.scrim{display:none}
+section.grp h2 .n{font:500 12px var(--f-mono);color:var(--accent)}
+section.grp > p.sub{margin:0 0 10px;color:var(--muted);font-size:13.5px}
+h3.sub{font:600 .95rem var(--f-display);color:var(--accent);margin:16px 0 4px;letter-spacing:.02em}
+.rows{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.row{display:grid;grid-template-columns:minmax(150px,220px) minmax(0,1fr);gap:4px 18px;padding:12px 16px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.nm{font-weight:600;min-width:0}
+.nm small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+.body{min-width:0;display:grid;gap:5px}
+.ord{font:14px/1.55 var(--f-mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.note{font-size:13.5px;color:var(--muted)}
+.was{font-size:12.5px;color:var(--fix)}
+.was s{opacity:.85}
+.badge{display:inline-block;font:600 11px var(--f-body);padding:1px 7px;border-radius:5px;margin-left:6px;vertical-align:2px;letter-spacing:.03em}
+.b-fix{background:var(--fix-bg);color:var(--fix)}
+.b-add{background:var(--add-bg);color:var(--add)}
+.calc{display:grid;gap:12px}
+.calc .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.calc label{display:grid;gap:3px;font-size:12.5px;color:var(--muted)}
+.calc input,.calc select{font:16px var(--f-mono);padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);min-width:0;width:100%}
+.out{display:flex;flex-wrap:wrap;gap:10px 28px;font:14px var(--f-mono)}
+.out b{font:600 1.35rem var(--f-mono);color:var(--accent);font-variant-numeric:tabular-nums}
+.pw{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 10px;padding:10px 14px;background:var(--accent-soft);border-radius:10px;position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--barh,62px));z-index:3}
+.pw label{font-weight:600}
+.pw input{font:600 18px var(--f-mono);width:7ch;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--paper);color:var(--ink)}
+.pc{color:var(--accent);font-weight:500}
+.pc:empty{display:none}
+.empty{color:var(--muted);padding:20px 0}
+footer{margin-top:40px;color:var(--muted);font-size:12.5px}
+@media (max-width:820px){
+  body{padding-block:0 calc(env(safe-area-inset-bottom,0px) + 84px);font-size:15.5px}
+  header.top{padding-block:14px 4px}
+  header.top h1{font-size:1.45rem}
+  header.top p{font-size:13px}
+  .bar{padding-block:8px}
+  .bar input{flex-basis:100%;padding:11px 14px;border-radius:12px}
+  .count{display:none}
+  .layout{grid-template-columns:minmax(0,1fr);margin-top:12px}
+  nav.idx{display:none}
+  main{gap:10px}
+  section.grp h2{margin:0}
+  .gt{cursor:pointer;align-items:center;min-height:54px;padding:10px 14px;background:var(--paper);border:1px solid var(--line);border-radius:12px;font-size:1.08rem;-webkit-tap-highlight-color:transparent}
+  .gt .cnt{display:inline;margin-left:auto;font:500 12px var(--f-mono);color:var(--muted)}
+  .gt .chev{display:block;width:18px;height:18px;color:var(--muted);transition:transform .15s;flex:none}
+  .grp:not(.closed) .gt{border-color:var(--accent);background:var(--accent-soft)}
+  .grp:not(.closed) .gt .chev{transform:rotate(180deg)}
+  .grp.closed > :not(h2){display:none!important}
+  .grp > p.sub{margin:8px 2px 6px}
+  .rows{border-radius:12px}
+  .row{grid-template-columns:minmax(0,1fr);padding:12px 14px}
+  .ord{font-size:14.5px}
+  .calc{margin-top:8px}
+  .tabbar{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--paper);border-top:1px solid var(--line);padding:6px 6px calc(env(safe-area-inset-bottom,0px) + 6px)}
+  .tabbar button{font:500 11.5px var(--f-body);color:var(--muted);background:none;border:0;display:grid;justify-items:center;gap:2px;min-height:48px;padding:4px 0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .tabbar button svg{width:24px;height:24px}
+  .tabbar button[aria-current="true"]{color:var(--accent)}
+  .scrim:not([hidden]){display:block;position:fixed;inset:0;background:rgb(0 0 0 / .35);z-index:24}
+  .sheet:not([hidden]){display:grid;gap:10px;position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--paper);border-radius:18px 18px 0 0;padding:10px 16px calc(env(safe-area-inset-bottom,0px) + 18px);max-height:78vh;overflow:auto}
+  .sheet .grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 4px}
+  .sheet h2{font:700 1.1rem var(--f-display);margin:0}
+  .sheet .list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .sheet .list button{font:500 14px var(--f-body);text-align:left;min-height:52px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);display:flex;justify-content:space-between;align-items:center;gap:6px;cursor:pointer}
+  .sheet .list button span{font:11px var(--f-mono);color:var(--muted)}
+  .sheet .actions{display:flex;gap:8px}
+  .sheet .actions button{flex:1;font:500 14px var(--f-body);min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header class="top">
+  <h1>Ward Order Handbook</h1>
+  <p>คำสั่งยาที่ใช้บ่อยบนหอผู้ป่วย จัดตามระบบ ขนาดยาเป็นของผู้ใหญ่ น้ำหนักตัวอ้างอิง 60 kg เว้นแต่ระบุไว้</p>
+</header>
+
+<div class="bar">
+  <input id="q" type="search" placeholder="ค้นหา เช่น meropenem, hyperK, q8h" aria-label="ค้นหา" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="count" id="count"></span>
+</div>
+
+<div class="layout">
+  <nav class="idx" id="idx" aria-label="หมวด"></nav>
+  <main id="main">
+
+    <section class="grp" id="calc" data-title="คำนวณ rate ยาหยด" data-n="ml/hr">
+      <h2 id="calc-h">คำนวณ rate ยาหยด</h2>
+      <div class="callout calc">
+      <div class="fields">
+        <label for="c-drug">ยา / ความเข้มข้น
+          <select id="c-drug"></select></label>
+        <label for="c-wt">น้ำหนัก (kg)
+          <input id="c-wt" type="number" inputmode="decimal" value="60" min="1"></label>
+        <label for="c-dose"><span id="c-unit">ขนาดยา</span>
+          <input id="c-dose" type="number" inputmode="decimal" step="any"></label>
+        <label for="c-rate">หรือใส่ rate (ml/hr)
+          <input id="c-rate" type="number" inputmode="decimal" step="any"></label>
+      </div>
+      <div class="out" id="c-out"></div>
+      <p class="note" style="margin:0">สูตร: ml/hr = ขนาดยา (mcg/hr) ÷ ความเข้มข้น (mcg/ml) · ตรวจความเข้มข้นกับที่ผสมจริงทุกครั้ง</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="noresult" id="noresult" hidden>ไม่พบรายการที่ตรงกับคำค้น</div>
+<footer>ใช้เป็นเอกสารทบทวนส่วนตัว ขนาดยาปรับตามแนวทางและบัญชียาของโรงพยาบาล การทำงานของไต/ตับ น้ำหนัก และสภาวะผู้ป่วยเสมอ ตรวจสอบกับเภสัชกรเมื่อไม่แน่ใจ · ศูนย์พิษวิทยารามาธิบดี 1367</footer>
+</div>
+
+<nav class="tabbar" aria-label="เมนู">
+  <button type="button" id="t-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>ค้นหา</button>
+  <button type="button" id="t-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>หมวด</button>
+  <button type="button" id="t-drip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9z"/></svg>ยาหยด</button>
+  <button type="button" id="t-peds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="7" r="3"/><path d="M6 21v-3a6 6 0 0 1 12 0v3"/></svg>ยาเด็ก</button>
+</nav>
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-label="เลือกหมวด" hidden>
+  <div class="grab"></div>
+  <h2>เลือกหมวด</h2>
+  <div class="list" id="sheetlist"></div>
+  <div class="actions"><button type="button" id="s-collapse">ปิดทุกหมวด</button><button type="button" id="s-close">ปิด</button></div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<script>
+// d: [name, sub, order, note, tag, was]
+const G = [
+{id:'emerg',t:'ฉุกเฉิน · CPR · Anaphylaxis',s:'',items:[
+['Adrenaline (CPR)','cardiac arrest','1 mg IV push q3–5 min','Asystole/PEA ให้เร็วที่สุด · VF/pVT ให้หลัง shock ครั้งที่ 2','add'],
+['Amiodarone (arrest)','pulseless VF/VT','300 mg IV push → ครั้งที่ 2 150 mg','ให้หลัง shock ครั้งที่ 3','add'],
+['Adrenaline IM','anaphylaxis','Adrenaline (1:1,000) 0.5 mg IM ต้นขาด้านนอก\nrepeat q5–15 min','ยาหลักของ anaphylaxis · เด็ก 0.01 mg/kg (max 0.5 mg) · CPM 10 mg IV และ steroid เป็นยาเสริม','add'],
+['Prednisolone','หลัง anaphylaxis','Prednisolone (5) 3x2 po pc × 4 days','ให้หลังอาการคงที่ หลักฐานป้องกัน biphasic reaction ไม่ชัด'],
+['CPM','chlorpheniramine','CPM 10 mg IV stat\nCPM (4) 1x3 po pc','ง่วง ระวังผู้สูงอายุ'],
+['Adenosine','SVT','Adenosine 6 mg IV rapid push + NSS 20 ml flush\nไม่หาย → 12 mg (ซ้ำได้อีก 1 ครั้ง)','เริ่ม vagal maneuver ก่อน · ให้ทางแขนใกล้หัวใจ ติด monitor · ระวัง asthma','add'],
+['Atropine','bradycardia','Atropine 1 mg IV q3–5 min (max 3 mg)','ไม่ตอบสนอง → adrenaline/dopamine drip หรือ pacing','add'],
+['50% Glucose','hypoglycemia','50% glucose 50 ml IV push','ตามด้วย 10% DW drip ถ้าเสี่ยงต่ำซ้ำ (SU, ไตวาย) · alcoholic ให้ thiamine ร่วม','fix','50%glucose 50 ml iv plush'],
+['Naloxone','opioid overdose','Naloxone 0.04–0.4 mg IV q2–3 min titrate จน RR ≥ 12','ออกฤทธิ์สั้นกว่า morphine ต้องเฝ้าระวังซ้ำ','add']
+]},
+{id:'drip',t:'Vasopressor · Inotrope · ยาหยดต่อเนื่อง',s:'ความเข้มข้นแบบที่ใช้กันบนหอ (a:b = mg : ml หรือตามที่ระบุ)',items:[
+['Norepinephrine','Levophed','Levophed (4:100) = 4 mg + 5%DW 100 ml (40 mcg/ml)\nIV 3–30 ml/hr (2–20 mcg/min) keep MAP ≥ 65 mmHg','ml/hr = dose (mcg/kg/min) × น้ำหนัก × 1.5 · 0.25 mcg/kg/min ≈ 22 ml/hr ที่ 60 kg\nถ้า ≥ 0.25 mcg/kg/min นาน ≥ 4 hr → Hydrocortisone 50 mg IV q6h (SSC 2021) · ไม่มี max ตายตัว มักไม่เกิน ~1 mcg/kg/min','fix','Max 1mcg/kg/min "นน เท่าไหร่ เอา max เท่านั้น" (rate = น้ำหนัก ได้แค่ 0.67 mcg/kg/min) · rate ≥15 ml/hr ให้ hydrocortisone'],
+['Adrenaline drip','epinephrine','Adrenaline (1:10) = 10 mg + NSS 100 ml (100 mcg/ml)\nIV 3–40 ml/hr (5–67 mcg/min)','ไม่มี max ตายตัว titrate ตาม MAP · เฝ้าระวัง tachyarrhythmia, lactate สูง'],
+['Dopamine','','Dopamine (2:1) = 1000 mg + NSS 500 ml (2 mg/ml)\n5–20 mcg/kg/min','ml/hr = dose × น้ำหนัก × 0.03 → 60 kg: 5 mcg/kg/min = 9 ml/hr\n3 ml/hr ≈ 1.7 mcg/kg/min (low dose ไม่มีผลปกป้องไต)','fix','Dopamine (2:1) iv rate 3 ml/hr'],
+['Dobutamine','','Dobutamine (2:1) = 500 mg + NSS 250 ml (2 mg/ml)\n2.5–20 mcg/kg/min','60 kg: 9 ml/hr = 5 mcg/kg/min · ใช้ใน low output HF','fix','Dobutamine (2:1) IV 9 ml/hr ??'],
+['Milrinone','PDE3 inhibitor','0.375–0.75 mcg/kg/min IV (loading 50 mcg/kg ใน 10 min มักงดถ้า BP ต่ำ)','inotrope + vasodilator สำหรับ HF · ลดขนาดตามไต · keep K ≥ 4, Mg ≥ 2 ลด arrhythmia','fix','Milinone ... keep Ca 10'],
+['Nitroglycerin','NTG','NTG (1:5) = 50 mg + 5%DW 250 ml (200 mcg/ml)\nstart 3 ml/hr (10 mcg/min) titrate +5–10 mcg/min q5–10 min','ACS: titrate จนหายเจ็บอก keep SBP ≥ 90 · ห้ามใน RV infarct, ใช้ PDE5i ใน 24–48 hr','fix','รวม 2 รายการ'],
+['Nicardipine','HT emergency','Nicardipine (1:5) = 20 mg + NSS to 100 ml (0.2 mg/ml)\nstart 5 mg/hr = 25 ml/hr, titrate +2.5 mg/hr (12.5 ml/hr) q5–15 min, max 15 mg/hr = 75 ml/hr','เป้าหมาย (ACC/AHA): ลด SBP ≤ 25% ใน 1 hr → 160/100–110 ใน 2–6 hr → ปกติใน 24–48 hr\nยกเว้น aortic dissection, stroke, preeclampsia มีเป้าเฉพาะ','fix','MAP ลด 10–20% ใน 1 hr, 5–15% ใน 23 hr, rate 3–75 ml/hr'],
+['Amiodarone','AF / stable VT','150 mg + 5%DW 100 ml IV in 10 min\nthen 900 mg + 5%DW 500 ml IV in 24 hr (33 ml/hr × 6 hr → 17 ml/hr × 18 hr)','ไม่ใช่ยาตัวแรกของ SVT (ใช้ adenosine) · ใช้ 5%DW · ระวัง hypotension, phlebitis','fix','SVT → Amiodarone 150 mg drip in 30–60 min'],
+['Midazolam','Dormicum','Midazolam (1:1) = 1 mg/ml IV 1–10 ml/hr','titrate keep RASS 0 ถึง −1 · ปลุกประเมินทุกวัน'],
+['Fentanyl','analgosedation','Fentanyl 25–50 mcg IV stat\nthen Fentanyl (5:1) = 500 mcg + NSS 100 ml (5 mcg/ml) 5–20 ml/hr (25–100 mcg/hr)','keep RASS 0 ถึง −1','fix','รวม 3 รายการ · สะกด RAAS'],
+['Morphine drip','palliative','Morphine 10 mg + NSS 100 ml (0.1 mg/ml) IV 10 ml/hr = 1 mg/hr','หรือ 10 mg + NSS 50 ml (0.2 mg/ml) 5 ml/hr ได้ขนาดเท่ากัน · ปรับตามอาการหอบ/ปวด']
+]},
+{id:'cvs',t:'หัวใจและหลอดเลือด',s:'',sub:[
+{t:'ยาลดความดัน',items:[
+['Amlodipine','','Amlodipine (5) 1x1 po pc (max 10 mg)','','fix','amlodipine (5) po pc w'],
+['Manidipine','','Manidipine (10/20) 1x1 po pc เช้า','','fix','ไม่มีวิธีใช้'],
+['Enalapril','','Enalapril (5) 1x2 po pc (max 20 mg bid)','ตรวจ Cr, K หลังเริ่ม 1–2 สัปดาห์ · ห้ามในหญิงตั้งครรภ์'],
+['Captopril','HT urgency','Captopril (25) 1 tab po stat','HT urgency ลด BP ช้าๆ ใน 24–48 hr ไม่ต้องลดทันที'],
+['HCTZ','','HCTZ (25) 1x1 po pc เช้า','ระวัง hypoK, hypoNa, hyperuricemia','fix','HCTZ (25) 1x1 1x2 po pc'],
+['Atenolol','','Atenolol (50) 1x1 po pc (max 100 mg/day)','ขับทางไต ลดขนาดเมื่อ CrCl < 35','fix','Atenolo 50 mg 1x2'],
+['Carvedilol','HFrEF','Carvedilol (6.25) ½x2 po pc (3.125 mg bid)\ntitrate เท่าตัวทุก 2 wk → max 25 mg bid (≤85 kg), 50 mg bid (>85 kg)','เม็ดยามี 6.25 / 12.5 / 25 mg','fix','carvedilol (1.25) — ไม่มีขนาดนี้'],
+['Diltiazem','','Diltiazem (30) 1x3 po ac','ห้ามใน HFrEF · ระวังให้ร่วม beta-blocker'],
+['Doxazosin','','Doxazosin (1) 1x1 po hs → titrate max 8 mg/day','ยาแรกให้ก่อนนอน กันหน้ามืด (first-dose hypotension)','fix','doxazosin (1) 1x3 / (2) ½'],
+['Prazosin','','Prazosin (1) 1 tab po hs → 1 mg bid–tid','first-dose hypotension','fix','Prazocin (1) 2 tab po pc'],
+['Methyldopa','ตั้งครรภ์','Methyldopa (250) 1x3 po pc (max 3 g/day)',''],
+['Nifedipine IR','severe HT ในครรภ์','Nifedipine (10) 1 cap po → ไม่ถึงเป้า 20 mg q20 min (รวม ≤ 3 dose)\nthen 10–20 mg po q4–6 hr','ห้ามอมใต้ลิ้น · ใช้เมื่อ BP ≥ 160/110','fix','Adalat (20) q30 min × 3 then q8h'],
+['Hydralazine','','Hydralazine (25) 1x3 po pc → max 50 mg qid\nHFrEF: + ISDN (10) 2x3 po pc','','fix','รวม 2 รายการ'],
+['ISMN','Monolin','ISMN (20) 1x2 po ac 08.00 และ 14.00 น.','เว้นช่วงกลางคืนกัน nitrate tolerance','fix','รวม Monolin'],
+['Spironolactone','Aldactone','HF: Aldactone (25) 1x1 po pc\nAscites: (25) 4x1 po pc (100 mg) + Furosemide 40 mg ratio 100:40 (max 400:160)','ระวัง hyperK เมื่อ CrCl < 30 หรือให้ร่วม ACEI','fix','aldactone (25) 1x4']
+]},
+{t:'ACS · Antiplatelet · Anticoagulant',items:[
+['Aspirin','','ACS: ASA (300) เคี้ยว stat\nต่อ ASA (81) 1x1 po pc','','add'],
+['Clopidogrel','Plavix','ACS loading 300–600 mg po stat\nPlavix (75) 1x1 po pc','ถ้าต้องใช้ PPI ใช้ pantoprazole แทน omeprazole','fix','ไม่มีขนาด loading'],
+['Atorvastatin','','ACS: Atorvastatin (40) 1–2 tab po hs (40–80 mg)','','add'],
+['Simvastatin','','Simvastatin (10–20) 1x1 po hs','ให้ร่วม diltiazem ได้ไม่เกิน 10 mg · ร่วม amlodipine ไม่เกิน 20 mg'],
+['Cilostazol','','Cilostazol (100) 1x2 po ac','ห้ามใน heart failure'],
+['Enoxaparin','','Enoxaparin 1 mg/kg SC q12h (60 kg = 60 mg = 0.6 ml)\nCrCl < 30: 1 mg/kg SC OD','overlap กับ warfarin ≥ 5 วัน และ INR 2–3 ติดกัน ≥ 24 hr จึงหยุด','fix','Enoxaparin 0.6 mg sc q12h'],
+['Fondaparinux','','ACS / VTE prophylaxis: 2.5 mg SC OD (ACS ถึง 8 วันหรือจนจำหน่าย)','ห้ามเมื่อ CrCl < 20','fix','Fondaparinux 2.5 mg sc × 5 days'],
+['Heparin (UFH)','VTE','80 u/kg IV bolus then 18 u/kg/hr IV drip\nปรับตาม aPTT 1.5–2.5 เท่า','','add'],
+['Warfarin','','เริ่ม 3 mg/day (≈ 21 mg/wk) · ผู้สูงอายุ/ตับ/น้ำหนักน้อยเริ่ม 1–2 mg\nKeep INR 2–3 (mechanical mitral 2.5–3.5)\nปรับขนาดรวมต่อสัปดาห์ ±10–20%','สีเม็ด (ตามที่ใช้ในรพ.): (2) เหลือง, (3) ฟ้า, (5) ชมพู — สีต่างกันตามยี่ห้อ ตรวจกับเภสัช','fix','จัดข้อความใหม่']
+]},
+{t:'Diuretics · Volume',items:[
+['Furosemide IV','Lasix','Lasix 20–40 mg IV q6–12 hr (เคยกิน → IV 1–2.5 เท่าของขนาดที่กิน)\nประเมิน UOP ที่ 2 hr: ≥ 200 ml/2 hr → ให้ขนาดเดิม\n< 200 ml/2 hr → double dose และแจ้งแพทย์\nเป้า UOP 100–150 ml/hr','','fix','ขั้นตอน UOP ขัดกันเอง (<200 ml/h, notify, double)'],
+['Furosemide drip','','Furosemide 250 mg + NSS 250 ml IV 5–40 ml/hr (5–40 mg/hr)','max ~40 mg/hr (≈ 1 g/วัน) · ขนาดสูงเสี่ยง ototoxicity','fix','Furosemide 1 gm IV drip in 24 hr (ไม่ระบุการผสม)'],
+['Furosemide NB','off-label','Lasix 40 mg NB q6h','ใช้บรรเทาหอบใน palliative หลักฐานจำกัด'],
+['Albumin','','20% albumin 50 ml IV drip in 1 hr ตามด้วย Lasix 40 mg IV\n5% albumin 250 ml IV (volume)','20% ใช้ใน hypoalbuminemia + edema ดื้อ diuretic, SBP, large-volume paracentesis (6–8 g/L ascites)','fix','ไม่ระบุขนาด lasix']
+]}
+]},
+{id:'abx',t:'ยาต้านจุลชีพ',s:'ขนาดสำหรับไตปกติ ปรับตาม CrCl',sub:[
+{t:'Antibiotic IV',items:[
+['Ampicillin','','Ampicillin 2 g IV q4h (meningitis/Listeria)\nอื่นๆ 1–2 g IV q6h',''],
+['Penicillin G (PGS)','','Leptospirosis: PGS 1.5 MU IV q6h × 7 days\nNeurosyphilis: 3–4 MU IV q4h × 10–14 days','','fix','PGS 2 mu iv q8h (ต่ำเกิน)'],
+['Cloxacillin','','Cloxacillin 1–2 g IV q4–6h','MSSA'],
+['Cefazolin','','Cefazolin 1–2 g IV q8h (ติดเชื้อรุนแรง q6h)',''],
+['Ceftriaxone','','Ceftriaxone 2 g IV OD\nMeningitis 2 g IV q12h\nCirrhosis + UGIB: 1 g IV OD × 7 days','ห้ามผสมกับ Ca ในสายเดียวกัน','fix','ไม่มี dose meningitis'],
+['Cefotaxime','Claforan','Cefotaxime 2 g IV q6h (meningitis q4–6h)',''],
+['Ceftazidime','Fortum','Ceftazidime 2 g IV q8h','Melioidosis ≥ 10–14 วัน then Bactrim 3–6 เดือน · Pseudomonas','fix','Fortum 2 g iv q4h (เข้าหัว)'],
+['Amox-clavulanate','Augmentin IV','Augmentin 1.2 g IV q8h','ติดเชื้อรุนแรงบางแนวทางใช้ 2.2 g — ตรวจกับบัญชียาของรพ.'],
+['Piperacillin-tazobactam','Tazocin','Tazocin 4.5 g IV q6–8h (Pseudomonas q6h, extended infusion 4 hr)',''],
+['Ertapenem','','Ertapenem 1 g IV OD (CrCl < 30: 500 mg)','ไม่ครอบคลุม Pseudomonas/Acinetobacter','fix','ertapenam'],
+['Imipenem','+ cilastatin','Imipenem/cilastatin 500 mg IV q6h หรือ 1 g q8h','ระวังชักในไตวาย'],
+['Meropenem','','Meropenem 1 g + NSS 100 ml IV drip in 3 hr q8h (meningitis 2 g q8h)\nCrCl 26–50: 1 g q12h · 10–25: 500 mg q12h · < 10: 500 mg q24h','extended infusion ได้ระดับยาดีกว่า','fix','500 mg q12h (CrCl<50), 250 mg q12h (CrCl<10)'],
+['Sulbactam','CRAB','Sulbactam 3 g IV q8h (9 g/day) ปรับตามไต','ใช้ขนาดสูงสำหรับ Acinetobacter'],
+['Clindamycin','','Clindamycin 600–900 mg IV q8h',''],
+['Metronidazole','','Metronidazole 500 mg IV q8h',''],
+['Gentamicin','','Gentamicin 5–7 mg/kg IV OD (60 kg ≈ 300 mg)','ปรับ interval ตาม CrCl · ตรวจ Cr ทุก 2–3 วัน · ไม่ควรใช้เกิน 5–7 วัน','fix','gentamicin 240 mg iv q8h'],
+['Vancomycin','','Loading 25–30 mg/kg then 15–20 mg/kg IV q8–12h','drip ≥ 60 min/g · ปรับตาม trough/AUC และไต','fix','vancomycin 1g iv q12h (fixed dose)'],
+['Levofloxacin','','Levofloxacin 750 mg IV/po OD',''],
+['Ciprofloxacin','','Ciprofloxacin 400 mg IV q12h (Pseudomonas q8h)',''],
+['Fosfomycin IV','','Fosfomycin 4 g IV q8h (12–24 g/day แบ่ง 2–3 ครั้ง)','ใช้ร่วมยาอื่นใน MDR · Na load สูง','fix','Fosfomycin 2g iv q12h (ต่ำเกิน)']
+]},
+{t:'Antibiotic กิน',items:[
+['Amoxicillin','','Amoxicillin (500) 1x3 po pc (pneumonia 1 g tid)',''],
+['Augmentin','','Augmentin (1000) 1x2 po pc',''],
+['Dicloxacillin','','Dicloxacillin (250) 2x4 po ac (500 mg qid)','','fix','(250) 1x4 — ต่ำเกิน'],
+['Cephalexin','Ibilex','Cephalexin (500) 1x4 po (หรือ 250 2x4)','กินพร้อมหรือไม่พร้อมอาหารก็ได้','fix','(250) 1x4 — ต่ำเกิน · รวม Ibilex'],
+['Cefixime','Cefspan (100)','Cefspan (100) 2x2 po pc\nCrCl < 20: 1x2 po pc','Infective diarrhea 3–5 วัน · UTI 7 วัน','fix','รวม 3 รายการ'],
+['Roxithromycin','Rulid','Rulid (150) 1x2 po ac','','fix','รวม 2 รายการ'],
+['Clarithromycin','','Clarithromycin (500) 1x2 po pc','ห้ามให้ร่วม colchicine, simvastatin'],
+['Azithromycin','','Azithromycin (250) 2 tab po OD ac × 3 days\nหรือ 500 mg วันแรก then 250 mg OD × 4 days','','fix','(250) 1 tab po OD'],
+['Doxycycline','','Doxycycline (100) 1x2 po pc','Scrub typhus / leptospirosis 7 วัน · ดื่มน้ำตาม ไม่นอนทันที','fix','รวม 2 รายการซ้ำ'],
+['Ciprofloxacin','','Ciprofloxacin (500) 1x2 po pc\nCystitis 3 วัน · Pyelonephritis 7 วัน','','fix','(uti 3 days)(uti 3 days)'],
+['Norfloxacin','','Norfloxacin (400) 1x2 po pc\nSBP prophylaxis: 1x1 po pc',''],
+['Ofloxacin','','Ofloxacin (200) 1x2 po pc',''],
+['Co-trimoxazole','Bactrim','UTI: Bactrim Forte (800/160) 1x2 po pc — cystitis 3 วัน, pyelo 14 วัน\nPCP treatment: TMP 15–20 mg/kg/day → Bactrim SS 4x3 po pc (60 kg) × 21 days\nPCP prophylaxis: Bactrim Forte 1x1 (หรือ SS 2x1) po pc','ระวัง hyperK, rash','fix','Forte x10 day · prophylaxis 2x2'],
+['Metronidazole','','Metronidazole (200) 2x3 po pc × 7 days\nT. vaginalis 2 g single dose · C. difficile 500 mg tid × 10 days','งดแอลกอฮอล์','fix','x5day'],
+['Clindamycin','','Clindamycin (300) 1x3–4 po pc','']
+]},
+{t:'Antifungal · Antiviral · Antiparasitic',items:[
+['Amphotericin B','deoxycholate','Amphotericin B 0.7–1 mg/kg/day (60 kg ≈ 40 mg) + 5%DW 500 ml IV drip in 6–8 hr\nPre-hydration: NSS 500 ml IV in 30 min ก่อนให้ยา\nPremed: CPM 10 mg IV + Paracetamol (500) 1 tab po 30 min ก่อน\nLab: CBC, BUN, Cr, E\'lyte, Mg ทุกจันทร์ พฤหัส','NSS ช่วยลด nephrotoxicity · S/E: hypoK, hypoMg, AKI, ไข้หนาวสั่น, ซีด · ทดแทน K/Mg ตามผล','fix','Amphoteracin · เหตุผล "ถ่าง afferent arteriole"'],
+['Clotrimazole troche','oral thrush','Clotrimazole troche 10 mg อม 5 ครั้ง/วัน × 7–14 days','','fix','qid × 7 days'],
+['Itraconazole pulse','onychomycosis','Itraconazole (100) 2x2 po pc × 1 wk แล้วหยุด 3 wk = 1 pulse\nเล็บมือ 2 pulses · เล็บเท้า 3 pulses','กินพร้อมอาหาร · ตรวจ LFT · ห้ามใน HF','fix','ไม่ระบุจำนวน pulse'],
+['Acyclovir IV','','Acyclovir 10 mg/kg IV q8h (HSV encephalitis 14–21 วัน)\nอื่นๆ 5–10 mg/kg IV q8h','ขนาดตามน้ำหนัก ดื่มน้ำ/ให้สารน้ำพอ ปรับตามไต','fix','Acyclovir (500) iv q8h (fixed dose)'],
+['Acyclovir กิน','','HSV ครั้งแรก: (400) 1x3 × 7–10 days\nHSV recurrent: (400) 1x3 × 5 days\nZoster: 800 mg 5 ครั้ง/วัน × 7 days','','fix','recurrent ×10 day'],
+['Oseltamivir','Tamiflu','Oseltamivir (75) 1x2 po pc × 5 days\nCrCl 30–60: 30 mg bid','','fix','รวม 2 รายการ'],
+['Molnupiravir','','Molnupiravir (200) 4 cap po q12h × 5 days','เริ่มภายใน 5 วันหลังมีอาการ ห้ามในหญิงตั้งครรภ์'],
+['Albendazole','','Albendazole (400) 1 tab po once',''],
+['Ivermectin','Strongyloides','Ivermectin (6) 2 tab po ac OD × 2 days (200 mcg/kg)','']
+]},
+{t:'วัณโรค',items:[
+['Isoniazid','H','Isoniazid (100) 3x1 po hs (5 mg/kg)\n+ Vitamin B6 (50) 1x1 po pc','B6 กัน neuropathy','fix','ไม่มี B6'],
+['Rifampicin','R','Rifampicin (450) 1x1 po ac/hs (≥ 50 kg ใช้ 600 mg)','ท้องว่าง · ปัสสาวะสีส้ม · interaction warfarin, ยาคุม'],
+['Pyrazinamide','Z','Pyrazinamide (500) 20–25 mg/kg → 3 tab (<50 kg) / 4 tab po OD','ตรวจ LFT, uric acid','add'],
+['Ethambutol','E','Ethambutol (400) 15–20 mg/kg → 2–3 tab po OD','ตรวจสายตา ปรับตามไต']
+]}
+]},
+{id:'gi',t:'ทางเดินอาหาร',s:'',items:[
+['Omeprazole','Losec','UGIB: 40 mg IV q12h · ทั่วไป 40 mg IV OD\nกิน: (20) 1x1–2 po ac','ใช้กับ clopidogrel ลดฤทธิ์ → เลือก pantoprazole','fix','รวม 3 รายการ'],
+['Esomeprazole','Nexium','Nexium 80 mg IV stat then 80 mg + 5%DW 100 ml IV 10 ml/hr (8 mg/hr) × 72 hr','หลังส่องกล้องใน high-risk ulcer'],
+['Pantoprazole','','Pantoprazole 80 mg IV stat then 80 mg + NSS 100 ml IV 10 ml/hr (8 mg/hr) × 72 hr',''],
+['Famotidine','แทน ranitidine','Famotidine (20) 1x2 po pc','Ranitidine ถูกถอนออกจากตลาดปี 2020 (NDMA)','fix','Ranitidine (150) 1x2'],
+['Octreotide','Sandostatin','Variceal bleeding: 50 mcg IV bolus then 5 amp (500 mcg) + 5%DW 500 ml IV 50 ml/hr (50 mcg/hr) × 2–5 days\n+ Ceftriaxone 1 g IV OD × 7 days','S/E: คลื่นไส้ ปวดท้อง bradycardia hyperglycemia','fix','รวม 4 รายการ · ไม่มียาปฏิชีวนะป้องกัน'],
+['Metoclopramide','Plasil','Plasil 10 mg IV q6–8h\nPlasil (10) 1x3 po ac','max 30 mg/day ไม่เกิน 5 วัน · ระวัง EPS','fix','รวม 3 รายการ'],
+['Domperidone','Motilium','Motilium (10) 1x3 po ac (max 30 mg/day)','ระวัง QT prolong','fix','รวม 2 รายการ'],
+['Ondansetron','Onsia','Onsia 4–8 mg IV q8h prn\nOnsia (4/8) 1x3 po ac','ห้ามผสมใน line เดียวกับ NaHCO3 · ระวัง QT',''],
+['Hyoscine','Buscopan','Buscopan 20 mg IV/IM prn\nBuscopan (10) 1–2 tab x3 po pc','','fix','Buscopan (20) 1x3 — เม็ดมีแต่ 10 mg'],
+['Simethicone','Air-X','Air-X (80) 1x3–4 เคี้ยว pc, hs','','fix','air-x 1x1'],
+['M. carminative','','M. carminative 15–30 ml po tid pc',''],
+['Lactulose','','Lactulose 15–30 ml po 1x2–3\nHepatic encephalopathy: 30 ml q1–2h จนถ่าย then titrate ถ่าย 2–3 ครั้ง/วัน','','add'],
+['Sodium phosphate','Swiff','Swiff 45 ml po ตามด้วยน้ำ 1,250 ml ให้ 2 ครั้ง ห่างกัน 3–4 hr','bowel prep · ห้าม/ระวังใน CKD, HF, ผู้สูงอายุ'],
+['SSE','','SSE 1 dose q4h · hold ถ้าถ่าย > 3 ครั้ง','']
+]},
+{id:'lyte',t:'เกลือแร่ · สารน้ำ',s:'',items:[
+['Hyperkalemia','protocol','1) 10% Ca gluconate 10 ml + NSS 100 ml IV in 10 min (ซ้ำได้ถ้า ECG ยังเปลี่ยน)\n2) RI 10 u + 50% glucose 50 ml IV push → DTX q1h × 4–6 hr\n3) Salbutamol NB 10–20 mg\n4) 7.5% NaHCO3 50 ml IV (ถ้า acidosis)\n5) Kalimate 30 g + น้ำ 100 ml po q4–6h × 3 dose + Lactulose 30 ml\n6) Furosemide / dialysis','Kalimate ผสมน้ำและให้ห่างยาอื่น (ท้องผูก)','fix','RI 10 u + 50% glucose 100 ml'],
+['KCl IV','','KCl 40 mEq + NSS 1,000 ml IV 100 ml/hr (4 mEq/hr)','peripheral ≤ 10 mEq/hr · central ≤ 20 mEq/hr + monitor · แก้ Mg ร่วม'],
+['KCl กิน','','KCl elixir 30 ml (40 mEq) po q4–6h\nหรือ KCl tab (500 mg ≈ 6.7 mEq) 6 tab (40 mEq)','K ลด 1 mEq/L ≈ ขาด K รวม 200–400 mEq','fix','"-200 meq เพิ่ม 1 mmol-"'],
+['3% NaCl','symptomatic hypoNa','3% NaCl 150 ml IV in 20 min → check Na → ซ้ำได้ 2–3 ครั้ง','เป้า Na เพิ่ม 5 mEq/L แรก · ไม่เกิน 10 mEq/L ใน 24 hr (high-risk 8)','fix','in 30 min · ไม่มีเพดาน'],
+['Ca gluconate','hypocalcemia','10% Ca gluconate 10–20 ml + NSS 100 ml IV in 10–20 min\nthen 10% Ca gluconate 50 ml + NSS 500 ml IV 50 ml/hr (titrate ตาม Ca)','ห้ามผสมกับ NaHCO3 / ceftriaxone','fix','รวม 3 รายการ (push 10 min ใน 100 ml)'],
+['MgSO4','hypoMg','Day 1: 50% MgSO4 8 ml (4 g) + 5%DW 100 ml IV in 4 hr\nDay 2–3: 50% MgSO4 4 ml (2 g) + NSS 100 ml IV in 4 hr\ncheck Mg หลังครบ','','fix','รวม 2 รายการ'],
+['MgSO4','preeclampsia','Loading 4 g IV in 15–20 min then 1–2 g/hr IV\nmonitor DTR, RR ≥ 12, UOP ≥ 100 ml/4 hr','toxicity → 10% Ca gluconate 10 ml IV ช้าๆ','add'],
+['MgO','','MgO (140) 1 tab po tid pc',''],
+['NaHCO3 IV','','Isotonic: 7.5% NaHCO3 150 ml (3 amp) + 5%DW 850 ml IV 100 ml/hr\nหรือ 7.5% NaHCO3 75 ml + 5%DW 425 ml IV 80 ml/hr\nBolus: 7.5% NaHCO3 50 ml IV push','Sepsis: พิจารณาเมื่อ pH ≤ 7.2 ร่วมกับ AKI (SSC 2021)','fix','3 amp + 5%DNSS 850'],
+['NaHCO3 กิน','','NaHCO3 (300) 1x3 po pc','CKD metabolic acidosis'],
+['CaCO3','','CaCO3 (1500) 1x3 po พร้อมอาหาร','phosphate binder ต้องกินพร้อมอาหาร · เสริม Ca กินระหว่างมื้อ','fix','1x3 po pc'],
+['Heparin in PD','','Heparin 1,000 u add ใน PD bag ทุก bag','ใช้เมื่อมี fibrin ในน้ำยา']
+]},
+{id:'endo',t:'ต่อมไร้ท่อ · Steroid',s:'',items:[
+['RI scale','DTX','DTX 181–250 → RI 4 u SC\nDTX 251–300 → RI 6 u\nDTX 301–350 → RI 8 u\nDTX 351–400 → RI 10 u\n< 80 หรือ > 400 → แจ้งแพทย์','ก่อนนอนเปลี่ยนเป็น NPH · sliding scale อย่างเดียวคุมน้ำตาลไม่ดี ควรมี basal'],
+['Insulin drip','DKA / HHS','RI 0.1 u/kg/hr IV drip (± bolus 0.1 u/kg)\nK < 3.3 → ให้ K ก่อนเริ่ม insulin · K 3.3–5.3 → KCl 20–30 mEq/L ในสารน้ำ\nDTX < 250 → เปลี่ยนเป็น 5%D/NSS','','add'],
+['Metformin','','Metformin (500) 1x2 po pc → max 2,000–2,550 mg/day','eGFR 30–45 ≤ 1,000 mg/day · < 30 หยุด · งดก่อนฉีด contrast','fix','ไม่มีความถี่'],
+['Glipizide','','Glipizide (5) 1x1 po ac เช้า (max 20 mg/day)','ระวัง hypoglycemia ในผู้สูงอายุ/CKD'],
+['Levothyroxine','','Thyroxine (0.1) 1x1 po ac เช้า (ท้องว่าง 30–60 min)','ห่าง Ca, Fe ≥ 4 hr'],
+['Methimazole','MMI','MMI (5) 3x1 po pc','ตรวจ CBC ถ้าไข้ เจ็บคอ (agranulocytosis)'],
+['PTU','','PTU (50) 2x3 po pc','ใช้ไตรมาสแรกของครรภ์ / thyroid storm','fix','ไม่มีขนาด'],
+['Hydrocortisone','','Stress dose: 100 mg IV q8h (หรือ 50 mg q6h)\nRefractory septic shock: 200 mg/day (50 mg IV q6h หรือ drip ใน 24 hr) → หยุดยา vasopressor แล้วค่อย taper','','fix','รวม 2 รายการ'],
+['Prednisolone','adrenal insufficiency','Physiologic: Prednisolone (5) 1–0–½ po pc (7.5 mg/day)\nMinor stress (ไข้, ป่วย) ×2–3 เท่า × 2–3 วัน','','fix','ข้อความซ้อนกัน อ่านไม่ออก']
+]},
+{id:'pain',t:'แก้ปวด · Sedation · ยาชา',s:'',items:[
+['Paracetamol','','Paracetamol (500) 1–2 tab po q4–6h prn (max 4 g/day; โรคตับ/แอลกอฮอล์ ≤ 2 g)','','add'],
+['Ibuprofen','Brufen','Ibuprofen (400) 1x3 po pc','NSAIDs ทุกตัว: ระวัง CKD, UGIB, HF, ผู้สูงอายุ','fix','รวม 2 รายการ'],
+['Diclofenac','','Diclofenac (25) 1x3 po pc',''],
+['Naproxen','','Naproxen (250) 1x2 po pc (ถึง 500 mg bid)',''],
+['Mefenamic acid','Ponstan','Ponstan (500) 1x3 po pc (≤ 7 days)',''],
+['Parecoxib','Dynastat','Dynastat 40 mg IV then 20–40 mg IV q6–12h (max 80 mg/day)',''],
+['Ketorolac','','Ketorolac 30 mg (1 amp) IV q6–8h\n≥ 65 ปี, < 50 kg, CKD: 15 mg','max 120 mg/day ไม่เกิน 5 วัน','fix','1 amp iv q12h (ไม่มีข้อจำกัด)'],
+['Tramadol','','Tramol (50) 1x3 po pc\nTramol 50 mg IV/IM q6–8h prn (max 400 mg/day)','ลดเกณฑ์ชัก · serotonin syndrome กับ SSRI'],
+['Morphine IV','','ACS/ปวดรุนแรง: MO 3 mg IV repeat q5 min titrate\nprn: MO 3–4 mg IV q4–6h','ติดตาม RR, sedation · มี naloxone พร้อม','fix','รวม 3 รายการ'],
+['Pethidine','','Pethidine 25–50 mg IV q4–6h prn','เลี่ยงใน CKD/ผู้สูงอายุ (normeperidine → ชัก)','fix','q8h'],
+['Morphine SR','Kapanol','Kapanol (20) 1x1 po (หรือ q12h)','ห้ามเคี้ยว/บด'],
+['Orphenadrine','','Orphenadrine (100) 1x2 po pc','ยานอกบัญชี','fix','1x3'],
+['Gabapentin','neuropathic','Gabapentin (100) 1 tab po hs → titrate ถึง (300) 1x3','ปรับตามไต','fix','รวม 2 รายการ'],
+['Amitriptyline','','Amitriptyline (10) 1x1 po hs (insomnia / neuropathic pain)','ขนาดรักษาซึมเศร้าคือ 75–150 mg/day (25 mg ยังไม่ถึง) · ระวังผู้สูงอายุ','fix','if depressed 25 mg'],
+['Lidocaine','local anesthetic','Plain: max 4.5 mg/kg (≤ 300 mg)\nWith adrenaline: max 7 mg/kg (≤ 500 mg)','1% = 10 mg/ml → 60 kg plain ≤ 27 ml'],
+['Chloral hydrate','sedation เด็ก','Procedural sedation: 50–75 mg/kg/dose po (max 1 g ทารก / 2 g เด็ก)\nHypnotic: 25–50 mg/kg/dose','ตรวจความเข้มข้นยาน้ำของรพ.ก่อนแปลงเป็น ml · monitor SpO2','fix','นน/4 ml, 25 mg/kg (≤ 100 mg/kg/dose)']
+]},
+{id:'neuro',t:'ระบบประสาท · จิตเวช',s:'',items:[
+['Diazepam','status epilepticus','ผู้ใหญ่: 10 mg IV (0.15–0.2 mg/kg) ซ้ำได้ 1 ครั้งใน 5 min\nเด็ก: 0.3 mg/kg IV (max 5 mg ถ้า < 5 ปี, 10 mg ถ้า ≥ 5 ปี) · rectal 0.5 mg/kg','ไม่หยุด → phenytoin loading','fix','0.3 mkdose q 15 yr'],
+['Phenytoin','Dilantin','Loading 15–20 mg/kg (60 kg ≈ 1,000 mg) + NSS 100 ml IV in 30 min (≤ 50 mg/min)\nthen 100 mg IV/po q8h\nกิน: Dilantin (100) 3x1 po hs หรือ 1x3 po pc','ผสม NSS เท่านั้น · monitor ECG, BP ระหว่าง load','fix','รวม 3 รายการ (NSS 1,000 ml)'],
+['Valproate','Depakin','Depakin (500) 1x2 po pc → titrate 15–60 mg/kg/day','ตรวจ LFT, platelet · ห้ามในหญิงตั้งครรภ์'],
+['Mannitol','↑ICP','20% mannitol 250 ml IV in 30 min (0.5–1 g/kg)\nthen 20% mannitol 100 ml IV q8h','ติดตาม serum osm < 320, Na, UOP','fix','20% manitol 100 mg'],
+['Alcohol withdrawal','','Lorazepam (1) 2 tab po q6h\nหรือ Chlordiazepoxide (10) 2–5 tab po q6h\nปรับตาม CIWA-Ar','benzodiazepine คือยาหลัก · haloperidol ใช้เสริมเท่านั้น (ลดเกณฑ์ชัก)'],
+['Thiamine','','Refeeding / ดื่มสุราเรื้อรัง: 100 mg IV OD (ให้ก่อน glucose)\nAlcoholic ketoacidosis: 100 mg IV q8h\nWernicke / DT: 500 mg IV q8h × 3 days then 250 mg OD × 5 days','Wet beriberi 100 mg IV','fix','Alc met.acidosis · Berybery'],
+['Haloperidol','','Haloperidol (0.5) 1x3 po pc\nAgitation: 2.5–5 mg IM (max 20 mg/day)','ตรวจ QTc · ระวัง EPS'],
+['Risperidone','','Risperidone (2) 1x2 po pc',''],
+['Clozapine','','Clozapine (25) 1x1 po hs','ตรวจ ANC ทุกสัปดาห์ 18 สัปดาห์แรก'],
+['Fluoxetine','','Fluoxetine (20) 1x1 po pc เช้า',''],
+['Sertraline','','Sertraline (50) 1x1 po pc (เช้าหรือ hs)',''],
+['Lorazepam','Ativan','Lorazepam (0.5–1) 1x1 po hs','','fix','รวม Ativan'],
+['Hydroxyzine','Atarax','Atarax (10) 1 tab po q8h prn','ง่วง'],
+['Betahistine','','Betahistine (6–12) 1x3 po pc',''],
+['Pyritinol','Encephabol','Encephabol (100) 1x3 po pc','','fix','encrphabol'],
+['Bell palsy','','Prednisolone (5) 4x3 po pc × 5 days → 3x2 × 5 days → 1x2 × 5 days\n± Acyclovir (400) 1x5 po × 10 days (หรือ Valacyclovir 1 g tid × 7 days)\nF/U 1 wk OPD Med','ให้ภายใน 72 hr · antiviral ใช้ร่วม steroid ในรายรุนแรงเท่านั้น · ปิดตา/น้ำตาเทียม']
+]},
+{id:'resp',t:'ระบบหายใจ',s:'',items:[
+['Salbutamol NB','Ventolin','Acute: Ventolin 1 NB q20 min × 3 แล้ว q4h\nMaintenance: 1 NB q4–6h prn','','fix','ไม่มี protocol acute'],
+['Ipratropium/fenoterol','Berodual','Berodual 1 NB q6h','','fix','beradual'],
+['COPD / asthma AE','','Dexamethasone 4–5 mg IV q12h\nหรือ Prednisolone 40 mg po OD × 5 days','prednisolone กินได้ผลเท่า IV ถ้ากลืนได้','fix','ไม่มีทางเลือก po'],
+['Adrenaline NB','post-extubation stridor','Adrenaline (1:1,000) 1 ml + NSS 3 ml NB ก่อน off ETT และ q4–6h prn 1–3 วัน\nร่วมกับ Dexamethasone 4–5 mg IV q6h 1–3 วัน (ให้ก่อนถอด 12–24 hr ถ้าเสี่ยง)','','fix','Adrenaline (1:10,000) 1 ml + NSS up to 4 ml'],
+['Bromhexine','','Bromhexine (8) 1x3 po pc',''],
+['Acetylcysteine','Fluimucil','Fluimucil (200) 1x3 po pc (หรือ 600 mg OD)','']
+]},
+{id:'heme',t:'เลือด · ห้ามเลือด',s:'',items:[
+['Tranexamic acid','Transamine','IV: 1 g IV q8h\nTrauma: 1 g IV in 10 min then 1 g in 8 hr (เริ่มภายใน 3 hr)\nกิน: (250) 2x3 po pc\nเลือดออกเหงือก: (250) 1 cap ผสมน้ำ 20 ml อมกลั้วปาก qid pc, hs','ปรับตามไต','fix','รวม 3 รายการ'],
+['Vitamin K1','','Vit K 10 mg + NSS 100 ml IV drip in 30–60 min','อาจเกิด anaphylactoid ถ้าให้เร็ว · warfarin INR สูงไม่มีเลือดออกใช้ 1–2.5 mg po','fix','NSS 100 mg'],
+['Folic acid','','Folic acid (5) 1x1 po pc','','fix','รวม 2 รายการ'],
+['Norethisterone','Primolut N','Primolut N (5) 1x3 po pc ต่อจน Plt > 100,000 แล้วหยุด','เลือดออกทางช่องคลอดในภาวะเกล็ดเลือดต่ำ']
+]},
+{id:'rheum',t:'ข้อ · ผิวหนัง',s:'',items:[
+['Colchicine','','Acute gout: 1.2 mg (2 tab) stat → 0.6 mg อีก 1 hr (รวม 1.8 mg)\nthen (0.6) 1x1–2 po pc (ปรับตามไต)','ห้ามร่วม clarithromycin และ strong CYP3A4/P-gp inhibitor → myopathy, neuropathy, pancytopenia','fix','1 tab stat, 1 tab next 1 hr then 1x3'],
+['Allopurinol','','Allopurinol (100) 1x1 po pc (CKD: ½x1) titrate q2–4 wk → uric < 6','ให้ colchicine ป้องกัน flare 3–6 เดือน · HLA-B*5801 ก่อนเริ่มถ้าทำได้'],
+['Methotrexate','psoriasis','MTX (2.5) 3–6 tab po สัปดาห์ละครั้ง (7.5–15 mg/wk, max 25)\n+ Folic acid (5) 1x1 po ทุกวันยกเว้นวันที่กิน MTX','ย้ำ “สัปดาห์ละครั้ง” · ตรวจ CBC, LFT, Cr','fix','Metrotrexate 7 tab/week (ขนาดเริ่มสูง)']
+]},
+{id:'tox',t:'พิษวิทยา',s:'ปรึกษาศูนย์พิษวิทยา 1367',items:[
+['Organophosphate','atropine','Atropine 1.2–2.4 mg IV แล้ว double dose q5 min จน atropinized\n(ปอดโล่ง, HR > 80, SBP > 80, รักแร้แห้ง)\nthen drip 10–20% ของขนาดรวมที่ใช้/hr','ม่านตาขยายไม่ใช่เป้าหมาย','add'],
+['Paracetamol overdose','NAC IV 21 hr','NAC 150 mg/kg + 5%DW 200 ml in 1 hr\n→ 50 mg/kg + 5%DW 500 ml in 4 hr\n→ 100 mg/kg + 5%DW 1,000 ml in 16 hr','ใช้ Rumack-Matthew nomogram ที่ ≥ 4 hr','add']
+]},
+{id:'prot',t:'Protocol อื่นๆ',s:'',items:[
+['HIV PEP','','TDF/FTC (300/200) 1x1 po + Dolutegravir (50) 1x1 po × 28 days\n(ไม่มี FTC ใช้ TDF 300 + 3TC 300)','เริ่มเร็วที่สุด ภายใน 72 hr · ตรวจ HIV, HBsAg, Cr baseline','fix','AZT 100 2 tab q12h + 3TC 150 q12h × 30 days'],
+['STI prophylaxis','ผู้ถูกล่วงละเมิดทางเพศ','Ceftriaxone 500 mg IM stat\n+ Doxycycline (100) 1x2 po pc × 7 days\n+ Metronidazole 2 g po single dose','ร่วมกับ EC, HIV PEP, HBV vaccine ตามข้อบ่งชี้','fix','"Doxy-cef3-metronidazole"']
+]}
+];
+
+// ---- เพิ่มเติม ----
+const ADD={
+emerg:[
+['Activated charcoal','กินสารพิษ','Activated charcoal 1 g/kg (max 50 g) ผสมน้ำ po/NG','ได้ผลดีภายใน 1 hr · ห้ามใน corrosive, hydrocarbon, ซึม/ไม่ protect airway'],
+['Protamine','heparin reversal','Protamine 1 mg ต่อ heparin 100 u ที่ได้ใน 2–3 hr ล่าสุด IV ช้าๆ ≥ 10 min (max 50 mg)','enoxaparin: 1 mg ต่อ enoxaparin 1 mg (ใน 8 hr)']
+],
+drip:[
+['Labetalol','HT emergency / preeclampsia','20 mg IV in 2 min → 40 mg → 80 mg q10 min (max 300 mg; ครรภ์ 220 mg)','ห้ามใน asthma, HF, heart block'],
+['Hydralazine IV','preeclampsia','5–10 mg IV in 2 min q20 min (max 20–30 mg)','ติดตาม BP q5–15 min · ระวัง fetal distress'],
+['Streptokinase','STEMI','Streptokinase 1.5 MU + NSS 100 ml IV drip in 60 min','ภายใน 12 hr ของอาการ · ตรวจ contraindication · hypotension → ชะลอ drip · ASA + clopidogrel ร่วม']
+],
+cvs0:[
+['Losartan','','Losartan (50) 1x1 po pc (max 100 mg)','ใช้แทน ACEI เมื่อไอ · ห้ามใช้ร่วม ACEI'],
+['Bisoprolol','','Bisoprolol (5) 1x1 po pc\nHFrEF: เริ่ม 1.25 mg → titrate max 10 mg',''],
+['Metoprolol','','Metoprolol (100) ½x2 po pc',''],
+['Propranolol','','Propranolol (10) 1x3 po pc\nVarices: titrate HR 55–60 (max 160 mg/day)\nThyrotoxicosis: 20–40 mg q6–8h','ห้ามใน asthma'],
+['Furosemide กิน','','Furosemide (40) 1x1 po pc เช้า',''],
+['Dapagliflozin','SGLT2i','Dapagliflozin (10) 1x1 po เช้า','HFrEF, CKD, DM · eGFR < 25 ไม่เริ่มใหม่ · งดก่อนผ่าตัด/ป่วยหนัก (euglycemic DKA)']
+],
+cvs1:[
+['ISDN อมใต้ลิ้น','angina','ISDN (5) 1 tab SL prn q5 min (max 3 tab)','ไม่หายใน 3 เม็ด → รพ./ECG ทันที · ห้ามถ้า SBP < 90'],
+['Digoxin','','Digoxin (0.25) ½x1 po pc (0.125 mg)\nAF rapid: 0.25 mg IV q2h (max 1.5 mg/24 hr)','ลดขนาดในผู้สูงอายุ/CKD · ระวัง hypoK'],
+['Apixaban','NOAC','AF: Apixaban (5) 1x2 po\nลดเป็น 2.5 mg bid ถ้ามี ≥ 2 ข้อ: อายุ ≥ 80, น้ำหนัก ≤ 60 kg, Cr ≥ 1.5',''],
+['Rivaroxaban','NOAC','AF: Rivaroxaban (20) 1x1 po พร้อมอาหารเย็น\nCrCl 15–50: 15 mg','กินพร้อมอาหาร']
+],
+abx0:[
+['Cefoperazone-sulbactam','Sulperazone','Sulperazone 2 g IV q12h (max sulbactam 4 g/day)',''],
+['Azithromycin IV','','Azithromycin 500 mg IV OD','CAP atypical coverage']
+],
+abx1:[
+['Nitrofurantoin','','Nitrofurantoin (100) 1x2 po pc × 5 days','cystitis · ห้ามเมื่อ CrCl < 30'],
+['Fosfomycin sachet','','Fosfomycin 3 g ละลายน้ำ po single dose hs','cystitis รวมหญิงตั้งครรภ์'],
+['Benzathine penicillin','syphilis','Early syphilis: Benzathine penicillin 2.4 MU IM single dose\nLate latent: 2.4 MU IM สัปดาห์ละครั้ง × 3','แบ่งฉีดสะโพก 2 ข้าง'],
+['H. pylori','triple therapy','Omeprazole (20) 1x2 ac + Amoxicillin 1 g bid + Clarithromycin (500) 1x2 po pc × 14 days','']
+],
+abx2:[
+['Fluconazole','','Oral candidiasis: (200) 1 tab วันแรก then (100) 1x1 × 7–14 days\nVaginal candidiasis: 150 mg single dose','ปรับตามไต · interaction warfarin'],
+['Valacyclovir','','Zoster: Valacyclovir 1 g po tid × 7 days','ปรับตามไต'],
+['Praziquantel','พยาธิใบไม้ตับ','Praziquantel (600) 40 mg/kg po single dose hs','Opisthorchis viverrini'],
+['Tenofovir','HBV','TDF (300) 1x1 po','ตรวจ Cr, phosphate · CrCl < 50 ปรับ interval']
+],
+gi:[
+['Loperamide','','Loperamide (2) 2 tab stat then 1 tab หลังถ่ายเหลวทุกครั้ง (max 8 tab/day)','ห้ามใน bloody diarrhea / ไข้สูง / เด็กเล็ก'],
+['ORS','','ORS 1 ซอง + น้ำ 1 แก้ว (250 ml) จิบบ่อยๆ ตามถ่าย',''],
+['Bisacodyl','','Bisacodyl (5) 1–2 tab po hs',''],
+['Senna','Senokot','Senokot 2 tab po hs','ร่วมกับ opioid ทุกราย'],
+['Dimenhydrinate','Dramamine','Dramamine (50) 1 tab po q6h prn\n50 mg IV q6h prn','ง่วง · เวียนศีรษะ คลื่นไส้'],
+['Sucralfate','','Sucralfate 1 g po qid ac, hs','ห่างยาอื่น 2 hr']
+],
+lyte:[
+['Potassium citrate','','K citrate 1–2 ช้อนชา/sachet ละลายน้ำ po tid pc','hypoK ร่วม metabolic acidosis, นิ่ว'],
+['Phosphate','hypophosphatemia','K2HPO4 15 mmol + NSS 250 ml IV in 4–6 hr','refeeding · ตรวจ Ca ร่วม']
+],
+endo:[
+['NPH basal','','NPH 0.1–0.2 u/kg/day SC hs (60 kg ≈ 6–12 u)\nปรับ ±2 u q3 วันตาม FBS เป้า 80–130','',],
+['Mixtard 70/30','','Mixtard 2/3 ก่อนอาหารเช้า + 1/3 ก่อนอาหารเย็น SC (0.3–0.5 u/kg/day)',''],
+['Gliclazide MR','','Gliclazide MR (30) 1x1 po ac เช้า (max 120 mg)','hypoglycemia น้อยกว่า glipizide'],
+['Dexamethasone','cerebral edema','Dexamethasone 10 mg IV then 4 mg IV q6h','ใช้ใน brain tumor/abscess ไม่ใช้ใน stroke/TBI']
+],
+pain:[
+['Morphine กิน','','MO syrup/IR 5–10 mg po q4h prn (ผู้สูงอายุ 2.5–5 mg)','ให้ laxative ร่วม'],
+['Pregabalin','neuropathic','Pregabalin (75) 1x1 po hs → 75 mg bid (max 300 mg/day)','ปรับตามไต'],
+['Etoricoxib','Arcoxia','Arcoxia (90) 1x1 po pc\nAcute gout: 120 mg OD × ≤ 8 days',''],
+['Celecoxib','','Celecoxib (200) 1x1–2 po pc',''],
+['Eperisone','muscle relaxant','Eperisone (50) 1x3 po pc',''],
+['Tolperisone','muscle relaxant','Tolperisone (50) 1x3 po pc','']
+],
+neuro:[
+['Levetiracetam','','Status epilepticus: 60 mg/kg IV (max 4,500 mg) in 10–15 min\nMaintenance: (500) 1x2 po → max 1,500 mg bid','ปรับตามไต · ไม่มี interaction มาก'],
+['Aspirin','ischemic stroke','ASA (300) 1 tab stat (หลัง CT ไม่มี bleed) then (81–300) 1x1',''],
+['Flunarizine','','Flunarizine (5) 1–2 cap po hs','migraine prophylaxis / vertigo · ระวัง EPS ผู้สูงอายุ'],
+['Cinnarizine','','Cinnarizine (25) 1x3 po pc',''],
+['Quetiapine','delirium','Quetiapine (25) ½–1 tab po hs',''],
+['Olanzapine','','Olanzapine (5) 1x1 po hs',''],
+['Trihexyphenidyl','EPS','Trihexyphenidyl (2) 1x2 po pc','ระวังในผู้สูงอายุ (สับสน ปัสสาวะคั่ง)'],
+['Mirtazapine','','Mirtazapine (15) ½–1 tab po hs','ช่วยนอนหลับ เจริญอาหาร'],
+['Clonazepam','','Clonazepam (0.5) 1x1 po hs','']
+],
+resp:[
+['Budesonide NB','Pulmicort','Budesonide 1 mg NB q12h',''],
+['Salbutamol MDI','','Ventolin MDI 2–4 puffs + spacer q4–6h prn\nAcute: 4–8 puffs q20 min × 3',''],
+['Montelukast','','Montelukast (10) 1x1 po hs',''],
+['Theophylline SR','','Theophylline SR (200) 1x2 po pc','therapeutic range แคบ · interaction cipro, clarithro'],
+['Ambroxol','','Ambroxol (30) 1x3 po pc',''],
+['Dextromethorphan','','Dextromethorphan (15) 1x3 po pc','ไอแห้ง · ห้ามร่วม MAOI']
+],
+heme:[
+['Ferrous fumarate','','Ferrous fumarate (200) 1x1–3 po ac (หรือวันเว้นวัน)','กินพร้อมวิตามินซี ห่าง Ca, antacid · อุจจาระดำ'],
+['Vitamin B12','','Vit B12 1,000 mcg IM OD × 1 wk → สัปดาห์ละครั้ง × 4 → เดือนละครั้ง',''],
+['Iron sucrose','','Iron sucrose 200 mg + NSS 100 ml IV in 30 min (สัปดาห์ละ 1–3 ครั้ง)','คำนวณ total iron deficit'],
+['Erythropoietin','CKD anemia','EPO 4,000 u SC 2 ครั้ง/สัปดาห์','เป้า Hb 10–11.5 · เติม iron ก่อน']
+],
+rheum:[
+['Loratadine','','Loratadine (10) 1x1 po',''],
+['Cetirizine','','Cetirizine (10) 1x1 po hs',''],
+['Calamine lotion','','Calamine lotion ทาบริเวณคัน tid',''],
+['TA cream','triamcinolone','0.1% TA cream ทาบางๆ bid','ห้ามทาหน้า/ซอกพับนาน'],
+['Clobetasol','','0.05% Clobetasol cream ทา bid (≤ 2 wk)','steroid แรงสูงสุด · ห้ามหน้า'],
+['Ketoconazole cream','','2% Ketoconazole cream ทา bid × 2–4 wk','กลาก เกลื้อน'],
+['Permethrin','scabies','5% Permethrin cream ทาทั้งตัวคอลงมา ทิ้งไว้ 8–14 hr แล้วล้าง ซ้ำใน 1 wk','รักษาคนในบ้านพร้อมกัน ซักผ้าน้ำร้อน'],
+['Fusidic acid','','2% Fusidic acid cream ทา tid × 7 days','impetigo']
+],
+tox:[
+['Snakebite','','Antivenom ตามชนิดงู (สภากาชาด) · ปรึกษา 1367 เรื่องจำนวนขวด\nTetanus prophylaxis ทุกราย','ติดตาม VCT/20WBCT, motor weakness (neurotoxic)']
+]};
+const NEW=[
+{id:'ob',t:'สูติกรรม',s:'',items:[
+['Oxytocin','PPH prevention','Oxytocin 10 u IM หลังคลอดไหล่หน้า',''],
+['Oxytocin drip','PPH','Oxytocin 20–40 u + NSS 1,000 ml IV 125–250 ml/hr',''],
+['Methylergometrine','Methergin','0.2 mg IM (ซ้ำได้ q2–4h)','ห้ามใน HT / preeclampsia'],
+['Misoprostol','PPH','Misoprostol 800 mcg SL',''],
+['Tranexamic acid','PPH','1 g IV in 10 min (ภายใน 3 hr หลังคลอด) ซ้ำได้อีก 1 g ใน 30 min',''],
+['Dexamethasone','fetal lung maturity','Dexamethasone 6 mg IM q12h × 4 dose','GA 24–34 wk'],
+['Levonorgestrel','emergency contraception','Levonorgestrel 1.5 mg po single dose','ภายใน 72 hr (ถึง 120 hr ประสิทธิภาพลดลง)'],
+['Folic acid','ตั้งครรภ์','Folic acid 0.4 mg OD (high risk NTD 4–5 mg)','เริ่มก่อนตั้งครรภ์ 1–3 เดือน']
+]},
+{id:'uro',t:'ไต · ทางเดินปัสสาวะ',s:'',items:[
+['Tamsulosin','','Tamsulosin (0.4) 1x1 po hs','BPH, ช่วยขับนิ่วท่อไต · orthostatic hypotension'],
+['Finasteride','','Finasteride (5) 1x1 po','BPH ต่อมลูกหมากโต > 30–40 ml · ใช้ 6 เดือนเห็นผล'],
+['Oxybutynin','','Oxybutynin (5) 1x2–3 po pc','ระวังผู้สูงอายุ']
+]},
+{id:'vac',t:'วัคซีน · Immunoglobulin',s:'',items:[
+['Tetanus','','dT 0.5 ml IM\nแผลเสี่ยง + ได้วัคซีน < 3 เข็ม/ไม่ทราบ: + TIG 250 u IM (คนละตำแหน่ง)','ครบ 3 เข็ม: แผลสะอาดกระตุ้นถ้า > 10 ปี, แผลเสี่ยง > 5 ปี'],
+['Rabies PEP','','ID: 0.1 ml × 2 จุด วันที่ 0, 3, 7, 28\nIM: 1 dose วันที่ 0, 3, 7, 14–28\nเคยฉีดครบ: กระตุ้น ID 0.1 ml 1 จุด วัน 0, 3 หรือ IM 1 dose วัน 0, 3','Category III: + RIG (ERIG 40 u/kg, HRIG 20 u/kg) ฉีดรอบแผลให้มากที่สุด ภายใน 7 วันหลังเข็มแรก'],
+['Influenza','','Influenza vaccine 0.5 ml IM ปีละครั้ง','กลุ่มเสี่ยง 608, บุคลากร']
+]}];
+const map={emerg:['emerg'],drip:['drip'],cvs0:['cvs',0],cvs1:['cvs',1],abx0:['abx',0],abx1:['abx',1],abx2:['abx',2],gi:['gi'],lyte:['lyte'],endo:['endo'],pain:['pain'],neuro:['neuro'],resp:['resp'],heme:['heme'],rheum:['rheum'],tox:['tox']};
+Object.entries(ADD).forEach(([k,list])=>{const [gid,si]=map[k];const g=G.find(x=>x.id===gid);(si===undefined?g.items:g.sub[si].items).push(...list);});
+G.splice(G.findIndex(x=>x.id==='tox'),0,...NEW);
+G.find(x=>x.id==='rheum').t='ข้อ · ผิวหนัง · ภูมิแพ้';
+// ---- ยาเด็ก ----
+// {n,sb,r:rule, lo,hi, per:'dose'|'day', div, max, u, c:[[label,unit-per-ml]], note, fn(w)->string}
+const PEDS=[
+{h:'Resuscitation'},
+{n:'Adrenaline (CPR)',sb:'1:10,000',r:'0.01 mg/kg IV/IO q3–5 min',lo:.01,hi:.01,per:'dose',max:1,u:'mg',c:[['1:10,000 (0.1 mg/ml)',.1]],note:'= 0.1 ml/kg ของ 1:10,000'},
+{n:'Adrenaline IM',sb:'anaphylaxis',r:'0.01 mg/kg IM ต้นขาด้านนอก q5–15 min',lo:.01,hi:.01,per:'dose',max:.5,u:'mg',c:[['1:1,000 (1 mg/ml)',1]]},
+{n:'Atropine',sb:'bradycardia',r:'0.02 mg/kg IV/IO',lo:.02,hi:.02,per:'dose',max:.5,u:'mg',c:[['0.6 mg/ml',.6]]},
+{n:'Adenosine',sb:'SVT',r:'0.1 mg/kg rapid IV → ครั้งที่ 2 0.2 mg/kg (max 12 mg)',lo:.1,hi:.1,per:'dose',max:6,u:'mg',c:[['3 mg/ml',3]]},
+{n:'Amiodarone',sb:'VF/pVT',r:'5 mg/kg IV/IO (ซ้ำได้ถึง 15 mg/kg)',lo:5,hi:5,per:'dose',max:300,u:'mg',c:[['50 mg/ml',50]]},
+{n:'Defibrillation',sb:'',r:'2 J/kg → 4 J/kg → ≥ 4 J/kg (max 10 J/kg)',lo:2,hi:4,per:'dose',u:'J'},
+{n:'Naloxone',sb:'opioid overdose',r:'0.1 mg/kg IV/IM',lo:.1,hi:.1,per:'dose',max:2,u:'mg',c:[['0.4 mg/ml',.4]]},
+{n:'10% DW',sb:'hypoglycemia',r:'2–5 ml/kg IV',lo:2,hi:5,per:'dose',max:250,u:'ml',note:'เด็กใช้ 10% DW ไม่ใช้ 50%'},
+{n:'NSS bolus',sb:'shock',r:'10–20 ml/kg IV in 5–20 min',lo:10,hi:20,per:'dose',max:1000,u:'ml',note:'ประเมินซ้ำทุก bolus (ตับโต, crepitation) · HF/ขาดสารอาหารรุนแรงใช้ 10 ml/kg'},
+{h:'สารน้ำ · เกลือแร่'},
+{n:'Maintenance IV',sb:'Holliday-Segar',r:'100 ml/kg (10 kg แรก) + 50 ml/kg (10 kg ถัดไป) + 20 ml/kg (ส่วนที่เกิน)',fn:w=>{const d=w<=10?100*w:w<=20?1000+50*(w-10):1500+20*(w-20);return `${f(d)} ml/day ≈ ${f(d/24)} ml/hr`;},note:'ใช้ isotonic (5%D/NSS) เป็นหลัก'},
+{n:'ORS',sb:'ขาดน้ำเล็กน้อย–ปานกลาง',r:'50–100 ml/kg ใน 4 hr + 10 ml/kg ต่อการถ่ายเหลว 1 ครั้ง',lo:50,hi:100,per:'dose',u:'ml',note:'ปริมาณใน 4 hr แรก'},
+{n:'10% Ca gluconate',sb:'hypoCa / hyperK',r:'0.5–1 ml/kg IV in 10 min',lo:.5,hi:1,per:'dose',max:20,u:'ml',note:'monitor ECG · ห้ามผสม NaHCO3'},
+{n:'7.5% NaHCO3',sb:'',r:'1 mEq/kg IV ช้าๆ',lo:1,hi:1,per:'dose',max:50,u:'mEq',c:[['7.5% (0.9 mEq/ml)',.9]],note:'ทารกเจือจาง 1:1'},
+{n:'3% NaCl',sb:'symptomatic hypoNa',r:'2 ml/kg IV in 10–20 min ซ้ำได้ 2–3 ครั้ง',lo:2,hi:2,per:'dose',max:100,u:'ml',note:'Na เพิ่มไม่เกิน 10 mEq/L ใน 24 hr'},
+{n:'20% Mannitol',sb:'↑ICP',r:'0.5–1 g/kg = 2.5–5 ml/kg IV in 20–30 min',lo:2.5,hi:5,per:'dose',u:'ml'},
+{n:'Insulin drip',sb:'DKA',r:'RI 0.05–0.1 u/kg/hr IV (ไม่ bolus)',lo:.05,hi:.1,per:'dose',u:'u/hr',note:'เริ่มหลังให้สารน้ำ 1 hr · ระวัง cerebral edema'},
+{h:'ชัก'},
+{n:'Diazepam IV',sb:'',r:'0.2–0.3 mg/kg IV ซ้ำได้ 1 ครั้งใน 5–10 min',lo:.2,hi:.3,per:'dose',max:10,u:'mg',c:[['5 mg/ml',5]],note:'rectal 0.5 mg/kg (max 10 mg)'},
+{n:'Midazolam',sb:'buccal / IN / IM',r:'0.2–0.3 mg/kg',lo:.2,hi:.3,per:'dose',max:10,u:'mg',c:[['5 mg/ml',5]],note:'ใช้เมื่อยังเปิด IV ไม่ได้'},
+{n:'Phenytoin',sb:'loading',r:'20 mg/kg IV ใน NSS rate ≤ 1 mg/kg/min',lo:20,hi:20,per:'dose',max:1500,u:'mg',c:[['50 mg/ml',50]]},
+{n:'Phenobarbital',sb:'loading',r:'20 mg/kg IV in 20 min',lo:20,hi:20,per:'dose',max:1000,u:'mg',note:'maintenance 3–5 mg/kg/day · ระวังกดการหายใจหลัง benzodiazepine'},
+{n:'Levetiracetam',sb:'loading',r:'60 mg/kg IV in 15 min',lo:60,hi:60,per:'dose',max:4500,u:'mg',c:[['100 mg/ml',100]]},
+{h:'แก้ปวด · ลดไข้ · Sedation'},
+{n:'Paracetamol',sb:'',r:'10–15 mg/kg po q4–6h (max 75 mg/kg/day)',lo:10,hi:15,per:'dose',max:1000,u:'mg',c:[['120 mg/5 ml',24],['250 mg/5 ml',50]],note:'ไม่เกิน 5 ครั้ง/วัน'},
+{n:'Ibuprofen',sb:'> 6 เดือน',r:'5–10 mg/kg po q6–8h (max 40 mg/kg/day)',lo:5,hi:10,per:'dose',max:400,u:'mg',c:[['100 mg/5 ml',20]],note:'ห้ามในไข้เลือดออก ขาดน้ำ ไตผิดปกติ'},
+{n:'Morphine',sb:'IV',r:'0.05–0.1 mg/kg IV q2–4h prn',lo:.05,hi:.1,per:'dose',max:5,u:'mg',note:'ติดตาม RR, SpO2'},
+{n:'Fentanyl',sb:'IV / IN',r:'1–2 mcg/kg (IN 1.5 mcg/kg)',lo:1,hi:2,per:'dose',max:100,u:'mcg',c:[['50 mcg/ml',50]]},
+{n:'Ketamine',sb:'procedural sedation',r:'1–2 mg/kg IV (IM 4–5 mg/kg)',lo:1,hi:2,per:'dose',u:'mg',c:[['50 mg/ml',50]],note:'เตรียม airway · ไม่ใช้อายุ < 3 เดือน'},
+{h:'ยาต้านจุลชีพ กิน'},
+{n:'Amoxicillin',sb:'standard',r:'40–50 mg/kg/day po แบ่ง 3 ครั้ง',lo:40,hi:50,per:'day',div:3,max:1500,u:'mg',c:[['125 mg/5 ml',25],['250 mg/5 ml',50]]},
+{n:'Amoxicillin',sb:'high dose (AOM, pneumonia)',r:'80–90 mg/kg/day po แบ่ง 2 ครั้ง',lo:80,hi:90,per:'day',div:2,max:4000,u:'mg',c:[['250 mg/5 ml',50]]},
+{n:'Amox-clavulanate',sb:'7:1',r:'45 mg/kg/day (คิดจาก amoxicillin) po แบ่ง 2 ครั้ง',lo:45,hi:45,per:'day',div:2,max:1750,u:'mg',c:[['228 mg/5 ml (amox 40 mg/ml)',40],['457 mg/5 ml (amox 80 mg/ml)',80]],note:'high-dose 90 mg/kg/day ใช้สูตร 14:1'},
+{n:'Cephalexin',sb:'',r:'25–50 mg/kg/day po แบ่ง 4 ครั้ง',lo:25,hi:50,per:'day',div:4,max:4000,u:'mg',c:[['125 mg/5 ml',25],['250 mg/5 ml',50]]},
+{n:'Cefixime',sb:'',r:'8 mg/kg/day po OD (หรือแบ่ง 2)',lo:8,hi:8,per:'day',div:1,max:400,u:'mg',c:[['100 mg/5 ml',20]]},
+{n:'Azithromycin',sb:'',r:'10 mg/kg po OD × 3 วัน',lo:10,hi:10,per:'dose',max:500,u:'mg',c:[['200 mg/5 ml',40]],note:'หรือ 10 mg/kg วันแรก then 5 mg/kg × 4 วัน'},
+{n:'Co-trimoxazole',sb:'UTI',r:'TMP 6–12 mg/kg/day po แบ่ง 2 ครั้ง',lo:6,hi:12,per:'day',div:2,max:320,u:'mg TMP',c:[['TMP 40 mg/5 ml',8]],note:'ห้ามอายุ < 2 เดือน'},
+{n:'Metronidazole',sb:'',r:'30 mg/kg/day po แบ่ง 3 ครั้ง (amoebic 35–50)',lo:30,hi:30,per:'day',div:3,max:1500,u:'mg',c:[['200 mg/5 ml',40]],note:'ตรวจ strength ยาน้ำของรพ.'},
+{n:'Oseltamivir',sb:'> 1 ปี',r:'ตามช่วงน้ำหนัก po bid × 5 วัน',fn:w=>{const d=w<=15?30:w<=23?45:w<=40?60:75;return `${d} mg bid (≈ ${f(d/6)} ml ของ 6 mg/ml)`;},note:'< 1 ปี: 3 mg/kg bid'},
+{h:'ยาต้านจุลชีพ IV'},
+{n:'Ampicillin',sb:'',r:'100–200 mg/kg/day IV แบ่ง q6h (meningitis 300–400)',lo:100,hi:200,per:'day',div:4,max:12000,u:'mg'},
+{n:'Cloxacillin',sb:'',r:'100–200 mg/kg/day IV แบ่ง q6h',lo:100,hi:200,per:'day',div:4,max:12000,u:'mg'},
+{n:'Ceftriaxone',sb:'',r:'50–75 mg/kg/day IV OD (meningitis 100 mg/kg/day, max 4 g)',lo:50,hi:75,per:'day',div:1,max:2000,u:'mg'},
+{n:'Cefotaxime',sb:'',r:'150–200 mg/kg/day IV แบ่ง q6h (meningitis 300)',lo:150,hi:200,per:'day',div:4,max:12000,u:'mg'},
+{n:'Gentamicin',sb:'',r:'5–7.5 mg/kg IV OD',lo:5,hi:7.5,per:'day',div:1,u:'mg',note:'ปรับตามไต · ทารกแรกเกิดใช้ขนาดต่างกัน'},
+{h:'ทางเดินอาหาร · ภูมิแพ้'},
+{n:'Ondansetron',sb:'> 6 เดือน',r:'0.15 mg/kg po/IV',lo:.15,hi:.15,per:'dose',max:8,u:'mg',c:[['4 mg/5 ml',.8]],note:'gastroenteritis ให้ครั้งเดียว'},
+{n:'Domperidone',sb:'',r:'0.25 mg/kg po tid ac',lo:.25,hi:.25,per:'dose',max:10,u:'mg',c:[['5 mg/5 ml',1]]},
+{n:'CPM',sb:'> 2 ปี',r:'0.35 mg/kg/day po แบ่ง 3 ครั้ง',lo:.35,hi:.35,per:'day',div:3,max:12,u:'mg',c:[['2 mg/5 ml',.4]]},
+{n:'Cetirizine',sb:'',r:'6 เดือน–2 ปี 2.5 mg OD · 2–5 ปี 2.5–5 mg · ≥ 6 ปี 5–10 mg OD'},
+{n:'Zinc',sb:'ท้องร่วง',r:'< 6 เดือน 10 mg · ≥ 6 เดือน 20 mg po OD × 10–14 วัน'},
+{h:'ระบบหายใจ'},
+{n:'Salbutamol NB',sb:'',r:'< 20 kg 2.5 mg · ≥ 20 kg 5 mg NB (acute q20 min × 3)',fn:w=>w<20?'2.5 mg NB':'5 mg NB'},
+{n:'Salbutamol syrup',sb:'',r:'0.1–0.15 mg/kg po tid',lo:.1,hi:.15,per:'dose',max:4,u:'mg',c:[['2 mg/5 ml',.4]]},
+{n:'Prednisolone',sb:'asthma',r:'1–2 mg/kg/day po OD × 3–5 วัน',lo:1,hi:2,per:'day',div:1,max:40,u:'mg',note:'เม็ด 5 mg'},
+{n:'Dexamethasone',sb:'croup',r:'0.15–0.6 mg/kg po/IM/IV ครั้งเดียว',lo:.15,hi:.6,per:'dose',max:16,u:'mg',c:[['4 mg/ml inj',4]],note:'croup เล็กน้อย 0.15 mg/kg พอ'},
+{n:'Adrenaline NB',sb:'croup รุนแรง',r:'0.5 ml/kg ของ 1:1,000 NB',lo:.5,hi:.5,per:'dose',max:5,u:'ml',note:'สังเกตอาการต่อ ≥ 2–4 hr (rebound)'},
+{h:'อื่นๆ'},
+{n:'Iron',sb:'elemental Fe',r:'3–6 mg/kg/day po',lo:3,hi:6,per:'day',div:1,max:200,u:'mg Fe'},
+{n:'Albendazole',sb:'',r:'1–2 ปี 200 mg · ≥ 2 ปี 400 mg po ครั้งเดียว'},
+{n:'Vitamin K1',sb:'ทารกแรกเกิด',r:'1 mg IM (preterm / < 1,500 g 0.5 mg)'}
+];
+function f(v){if(!isFinite(v))return '–';const a=Math.abs(v);return (a>=100?Math.round(v):a>=10?Math.round(v*10)/10:Math.round(v*100)/100).toLocaleString('en-US');}
+function pedsCalc(p,w){
+ if(p.fn)return p.fn(w);
+ if(p.lo===undefined||!w)return '';
+ const cap=v=>p.max!=null?Math.min(v,p.max):v;
+ const rng=(a,b)=>a===b?f(a):`${f(a)}–${f(b)}`;
+ let lo=cap(p.lo*w),hi=cap(p.hi*w),s='',dl=lo,dh=hi;
+ if(p.per==='day'){s=`${rng(lo,hi)} ${p.u}/day`;if(p.div>1){dl=lo/p.div;dh=hi/p.div;s+=` → ${rng(dl,dh)} ${p.u}/ครั้ง × ${p.div}`;}}
+ else s=`${rng(lo,hi)} ${p.u}`;
+ if(p.max!=null&&p.hi*w>p.max)s+=' (ถึงขนาดสูงสุด)';
+ if(p.c)s+='\n'+p.c.map(([l,k])=>`≈ ${rng(dl/k,dh/k)} ml ของ ${l}`).join('\n');
+ return s;}
+const pedsRow=p=>p.h?`</div><h3 class="sub">${esc(p.h)}</h3><div class="rows">`:
+ `<div class="row" data-t="${esc((p.n+' '+(p.sb||'')+' '+p.r+' '+(p.note||'')+' เด็ก peds').toLowerCase())}">
+ <button type="button" class="cp" aria-label="คัดลอก order"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg></button><div class="nm">${esc(p.n)}${p.sb?`<small>${esc(p.sb)}</small>`:''}</div>
+ <div class="body"><div class="note" style="color:var(--ink)">${esc(p.r)}</div><div class="ord pc" data-i="${PEDS.indexOf(p)}"></div>${p.note?`<div class="note">${esc(p.note)}</div>`:''}</div></div>`;
+G.push({id:'peds',t:'ยาเด็ก · ตามน้ำหนัก',peds:true,items:PEDS.filter(p=>!p.h)});
+
+const all=[];
+G.forEach(g=>{const subs=g.sub||[{t:null,items:g.items}];subs.forEach(s=>s.items.forEach(it=>all.push({g:g.id,s:s.t,d:it})));});
+const CHEV='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>';
+const main=document.getElementById('main'),idx=document.getElementById('idx');
+const esc=x=>String(x).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const rowHTML=d=>{const [n,sb,o,note,tag,was]=d;
+ const b='';
+ return `<div class="row" data-tag="${tag||''}" data-t="${esc((n+' '+sb+' '+o+' '+note).toLowerCase())}">
+ <button type="button" class="cp" aria-label="คัดลอก order"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg></button><div class="nm">${esc(n)}${b}${sb?`<small>${esc(sb)}</small>`:''}</div>
+ <div class="body"><div class="ord">${esc(o)}</div>${note?`<div class="note">${esc(note).replace(/\n/g,'<br>')}</div>`:''}</div></div>`;};
+G.forEach((g,i)=>{const sec=document.createElement('section');sec.className='grp';sec.id=g.id;
+ const n0=(g.sub||[{items:g.items}]).reduce((a,s)=>a+s.items.length,0);
+ let h=`<h2><button type="button" class="gt" aria-expanded="true"><span class="n">${String(i+1).padStart(2,'0')}</span><span>${esc(g.t)}</span><span class="cnt">${n0}</span>${CHEV}</button></h2>${g.s?`<p class="sub">${esc(g.s)}</p>`:''}`;
+ const subs=g.sub||[{t:null,items:g.items}];
+ if(g.peds){h+=`<p class="sub">สำหรับเด็กอายุ > 1 เดือน · ทารกแรกเกิดใช้ขนาดต่างกัน · ไม่เกินขนาดผู้ใหญ่ · ปริมาตร ml ตรวจกับ strength ยาในรพ.</p>
+ <div class="pw"><label for="pw">น้ำหนักเด็ก (kg)</label><input id="pw" type="number" inputmode="decimal" min="1" max="100" step="0.1" value="15"></div>
+ <div class="blk"><div class="rows">${PEDS.map(pedsRow).join('')}</div></div>`.replace('<div class="rows"></div><h3','<h3');}
+ else subs.forEach(s=>{h+=`<div class="blk">${s.t?`<h3 class="sub">${esc(s.t)}</h3>`:''}<div class="rows">${s.items.map(rowHTML).join('')}</div></div>`;});
+ sec.innerHTML=h;main.appendChild(sec);
+ const n=subs.reduce((a,s)=>a+s.items.length,0);
+ idx.insertAdjacentHTML('beforeend',`<a href="#${g.id}">${esc(g.t.split(' · ')[0])}<span>${n}</span></a>`);});
+const pw=document.getElementById('pw');
+function pedsUpd(){const w=parseFloat(pw.value);document.querySelectorAll('.pc').forEach(e=>{e.textContent=pedsCalc(PEDS[+e.dataset.i],w);});}
+try{const sw=localStorage.getItem('wo-pw');if(sw)pw.value=sw;}catch(e){}
+pw.addEventListener('input',()=>{pedsUpd();try{localStorage.setItem('wo-pw',pw.value)}catch(e){}});pedsUpd();
+idx.insertAdjacentHTML('afterbegin','<a href="#calc">คำนวณ rate<span>ml/hr</span></a>');
+
+let filt='all';const q=document.getElementById('q'),cnt=document.getElementById('count');
+function apply(){const t=q.value.trim().toLowerCase();let shown=0;
+ document.querySelectorAll('.row').forEach(r=>{const ok=(!t||r.dataset.t.includes(t));r.hidden=!ok;if(ok)shown++;});
+ document.querySelectorAll('.blk').forEach(b=>b.hidden=!b.querySelector('.row:not([hidden])'));
+ document.querySelectorAll('#peds h3.sub').forEach(h=>{const r=h.nextElementSibling;h.hidden=!!r&&!r.querySelector('.row:not([hidden])');});
+ document.querySelectorAll('section.grp:not(#calc)').forEach(s=>s.hidden=!s.querySelector('.row:not([hidden])'));
+ document.getElementById('calc').hidden=!!t;
+ document.getElementById('noresult').hidden=shown>0;
+ cnt.textContent=`${shown} / ${all.length} รายการ`;syncOpen();}
+q.addEventListener('input',apply);
+q.addEventListener('keydown',e=>{if(e.key==='Enter')q.blur();});
+
+// ---- mobile: collapsible groups, tab bar, sheet, copy ----
+const mq=matchMedia('(max-width:820px)'),secs=[...document.querySelectorAll('section.grp')];
+let openSet=new Set();try{openSet=new Set(JSON.parse(localStorage.getItem('wo-open')||'[]'));}catch(e){}
+const saveOpen=()=>{try{localStorage.setItem('wo-open',JSON.stringify([...openSet]))}catch(e){}};
+function syncOpen(){const t=q.value.trim();secs.forEach(s=>{const c=mq.matches&&!t&&!openSet.has(s.id);s.classList.toggle('closed',c);const b=s.querySelector('.gt');if(b)b.setAttribute('aria-expanded',String(!c));});}
+function setBarH(){document.documentElement.style.setProperty('--barh',document.querySelector('.bar').offsetHeight+'px');}
+function goTo(id){const s=document.getElementById(id);if(!s)return;if(q.value){q.value='';apply();}openSet.add(id);saveOpen();syncOpen();
+ requestAnimationFrame(()=>{const y=s.getBoundingClientRect().top+scrollY-(document.querySelector('.bar').offsetHeight)-8;scrollTo({top:y,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});});}
+secs.forEach(s=>{const b=s.querySelector('.gt');if(!b)return;b.addEventListener('click',()=>{if(!mq.matches||q.value.trim())return;
+ if(openSet.has(s.id)){openSet.delete(s.id);saveOpen();syncOpen();}else goTo(s.id);});});
+// calc heading → button too
+(()=>{const s=document.getElementById('calc'),h=s.querySelector('h2');h.innerHTML=`<button type="button" class="gt" aria-expanded="true"><span class="n">00</span><span>คำนวณ rate ยาหยด</span><span class="cnt">ml/hr</span>${CHEV}</button>`;
+ h.querySelector('.gt').addEventListener('click',()=>{if(!mq.matches)return;if(openSet.has('calc')){openSet.delete('calc');saveOpen();syncOpen();}else goTo('calc');});})();
+idx.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;e.preventDefault();goTo(a.getAttribute('href').slice(1));});
+// sheet
+const sheet=document.getElementById('sheet'),scrim=document.getElementById('scrim'),sl=document.getElementById('sheetlist');
+secs.forEach(s=>{const title=s.id==='calc'?'คำนวณ rate ยาหยด':G.find(g=>g.id===s.id).t.split(' · ')[0];const n=s.querySelector('.cnt').textContent;
+ sl.insertAdjacentHTML('beforeend',`<button type="button" data-id="${s.id}">${esc(title)}<span>${esc(n)}</span></button>`);});
+const openSheet=v=>{sheet.hidden=!v;scrim.hidden=!v;};
+sl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;openSheet(false);goTo(b.dataset.id);});
+scrim.addEventListener('click',()=>openSheet(false));
+document.getElementById('s-close').addEventListener('click',()=>openSheet(false));
+document.getElementById('s-collapse').addEventListener('click',()=>{openSet.clear();saveOpen();syncOpen();openSheet(false);scrollTo({top:0});});
+document.getElementById('t-cat').addEventListener('click',()=>openSheet(sheet.hidden));
+document.getElementById('t-search').addEventListener('click',()=>{openSheet(false);scrollTo({top:0});q.focus();});
+document.getElementById('t-drip').addEventListener('click',()=>{openSheet(false);goTo('calc');});
+document.getElementById('t-peds').addEventListener('click',()=>{openSheet(false);goTo('peds');});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')openSheet(false);});
+// copy
+const toast=document.getElementById('toast');let tt;
+const showToast=m=>{toast.textContent=m;toast.hidden=false;clearTimeout(tt);tt=setTimeout(()=>toast.hidden=true,1400);};
+main.addEventListener('click',e=>{const b=e.target.closest('.cp');if(!b)return;const r=b.closest('.row');
+ const nm=r.querySelector('.nm').firstChild.textContent,body=[...r.querySelectorAll('.body > .ord, .body > .note:first-child')].map(x=>x.textContent).filter(Boolean).join('\n');
+ const txt=nm+'\n'+body;
+ const fallback=()=>{const sel=getSelection(),rg=document.createRange();rg.selectNodeContents(r.querySelector('.body'));sel.removeAllRanges();sel.addRange(rg);showToast('เลือกข้อความแล้ว กดคัดลอก');};
+ try{navigator.clipboard.writeText(txt).then(()=>showToast('คัดลอกแล้ว'),fallback);}catch(err){fallback();}});
+mq.addEventListener?mq.addEventListener('change',syncOpen):mq.addListener(syncOpen);
+addEventListener('resize',setBarH);setBarH();
+apply();
+
+// drip calculator
+const P=[
+ ['Norepinephrine 4 mg/100 ml',40,'mcg/kg/min',0.1],
+ ['Adrenaline 10 mg/100 ml',100,'mcg/kg/min',0.1],
+ ['Dopamine 1000 mg/500 ml',2000,'mcg/kg/min',5],
+ ['Dobutamine 500 mg/250 ml',2000,'mcg/kg/min',5],
+ ['NTG 50 mg/250 ml',200,'mcg/min',10],
+ ['Nicardipine 20 mg/100 ml',200,'mg/hr',5],
+ ['Midazolam 1 mg/ml',1000,'mg/hr',3],
+ ['Fentanyl 500 mcg/100 ml',5,'mcg/hr',50],
+ ['Amiodarone 900 mg/500 ml',1800,'mg/min',1]];
+const conv={'mcg/kg/min':w=>w*60,'mcg/min':()=>60,'mg/hr':()=>1000,'mcg/hr':()=>1,'mg/min':()=>60000};
+const sel=document.getElementById('c-drug'),wt=document.getElementById('c-wt'),ds=document.getElementById('c-dose'),rt=document.getElementById('c-rate'),out=document.getElementById('c-out'),un=document.getElementById('c-unit');
+P.forEach((p,i)=>sel.insertAdjacentHTML('beforeend',`<option value="${i}">${p[0]} (${p[1]} mcg/ml)</option>`));
+const fmt=v=>isFinite(v)?(Math.round(v*100)/100).toLocaleString('en-US'):'–';
+function calc(from){const p=P[sel.value],w=parseFloat(wt.value)||0,f=conv[p[2]](w);un.textContent=`ขนาดยา (${p[2]})`;
+ if(from==='rate'){const r=parseFloat(rt.value);ds.value=isFinite(r)&&f?fmt(r*p[1]/f).replace(/,/g,''):'';}
+ else{const d=parseFloat(ds.value);rt.value=isFinite(d)?fmt(d*f/p[1]).replace(/,/g,''):'';}
+ const d=parseFloat(ds.value),r=parseFloat(rt.value);
+ out.innerHTML=`<span>rate <b>${fmt(r)}</b> ml/hr</span><span>ขนาด <b>${fmt(d)}</b> ${p[2]}</span><span>= <b>${fmt(d*f/60)}</b> mcg/min</span>`;}
+sel.addEventListener('change',()=>{ds.value=P[sel.value][3];calc('dose');});
+ds.addEventListener('input',()=>calc('dose'));rt.addEventListener('input',()=>calc('rate'));wt.addEventListener('input',()=>calc('dose'));
+ds.value=P[0][3];calc('dose');
+</script>
+
+<script>
+if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+</script>
+</body>
+</html>
