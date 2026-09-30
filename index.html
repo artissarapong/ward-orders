@@ -184,7 +184,7 @@ footer{margin-top:40px;color:var(--muted);font-size:12.5px}
 </div>
 
 <div class="noresult" id="noresult" hidden>ไม่พบรายการที่ตรงกับคำค้น</div>
-<footer>ใช้เป็นเอกสารทบทวนส่วนตัว ขนาดยาปรับตามแนวทางและบัญชียาของโรงพยาบาล การทำงานของไต/ตับ น้ำหนัก และสภาวะผู้ป่วยเสมอ ตรวจสอบกับเภสัชกรเมื่อไม่แน่ใจ · ศูนย์พิษวิทยารามาธิบดี 1367</footer>
+<footer><b>ฉบับ v3 · 30 ก.ย. 2026 · 335 รายการ</b><br>ใช้เป็นเอกสารทบทวนส่วนตัว ขนาดยาปรับตามแนวทางและบัญชียาของโรงพยาบาล การทำงานของไต/ตับ น้ำหนัก และสภาวะผู้ป่วยเสมอ ตรวจสอบกับเภสัชกรเมื่อไม่แน่ใจ · ศูนย์พิษวิทยารามาธิบดี 1367</footer>
 </div>
 
 <nav class="tabbar" aria-label="เมนู">
@@ -764,7 +764,7 @@ ds.value=P[0][3];calc('dose');
 </script>
 
 <script>
-if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{}));}
 </script>
 </body>
 </html>
